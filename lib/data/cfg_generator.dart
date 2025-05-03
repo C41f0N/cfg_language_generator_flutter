@@ -20,10 +20,15 @@ class CfgGenerator extends ChangeNotifier {
     return true;
   }
 
-  void setProdRules(String rulesString) {
-    prodRules = json.decode(rulesString);
-
+  bool setProdRules(String rulesString) {
+    prodRules = {};
     terminSym = [];
+    root = "";
+    try {
+      prodRules = json.decode(rulesString);
+    } catch (exception) {
+      return false;
+    }
     for (List<dynamic> options in prodRules.values.toList()) {
       for (String option in options) {
         for (String element in option.split("+")) {
@@ -34,9 +39,8 @@ class CfgGenerator extends ChangeNotifier {
       }
     }
 
-    print(terminSym);
-
     notifyListeners();
+    return true;
   }
 
   List<String> getNodes() {
@@ -71,8 +75,8 @@ class CfgGenerator extends ChangeNotifier {
         if (prodRules.containsKey(symbol)) {
           for (var evaluation in prodRules[symbol]) {
             String newS = s.replaceFirst(symbol, evaluation, 0);
-            String rule = "$symbol -> ${prodRules[symbol]}";
-            String newRulesUsed = "$rulesUsed\n$rule\n$newS\n\n";
+            String rule = "${i + 1}) $symbol -> ${prodRules[symbol]}";
+            String newRulesUsed = " $rulesUsed\n$rule\n$newS\n\n";
 
             evaluate(newS, d, i + 1, newRulesUsed);
           }

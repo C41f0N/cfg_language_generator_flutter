@@ -27,11 +27,22 @@ class _HomeScreenState extends State<HomeScreen> {
           body: Center(
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * 0.2,
+                horizontal:
+                    MediaQuery.of(context).size.width <
+                            MediaQuery.of(context).size.height
+                        ? MediaQuery.of(context).size.width * 0.05
+                        : MediaQuery.of(context).size.width * 0.2,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Text(
+                    "CFG Language Generator",
+                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 30),
+
                   TextField(
                     decoration: InputDecoration(
                       hintText: "CFG Rules (In Json)",
@@ -39,12 +50,54 @@ class _HomeScreenState extends State<HomeScreen> {
                     controller: prodRulesController,
                     maxLines: null,
                   ),
+                  SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () {
-                      generator.setProdRules(prodRulesController.text);
+                      bool result = generator.setProdRules(
+                        prodRulesController.text,
+                      );
+
+                      if (result) {
+                        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Rules Updated")),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Invalid Rules!")),
+                        );
+                      }
                     },
-                    child: Text("Process Rules"),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text("Process Rules"),
+                    ),
                   ),
+                  SizedBox(height: 20),
+                  Text("Recursion Depth:"),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.1,
+                    ),
+
+                    child: Row(
+                      children: [
+                        Slider(
+                          value: generator.maxDepth / 20,
+                          onChanged: (x) {
+                            x *= 20;
+                            setState(() {
+                              generator.maxDepth = x.toInt();
+                            });
+                          },
+                        ),
+                        Text(generator.maxDepth.toString()),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -64,65 +117,81 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
+
+                  SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder:
-                            (context) => SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.4,
-                              height: MediaQuery.of(context).size.height * 0.4,
-                              child: AlertDialog(
-                                title: Text(
-                                  "Generated Sentences: ",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 26,
-                                  ),
+                      if (generator.root.isNotEmpty) {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (context) => SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.4,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.4,
+                                child: AlertDialog(
+                                  title: Text(
+                                    "Generated Sentences: ",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 26,
+                                    ),
 
-                                  textAlign: TextAlign.center,
-                                ),
-                                content: Center(
-                                  child: FutureBuilder(
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  content: FutureBuilder(
                                     future: generator.generateSentence(),
                                     builder: (context, snapshot) {
                                       if (snapshot.data == null) {
-                                        return CircularProgressIndicator();
+                                        return Center(
+                                          child: CircularProgressIndicator(),
+                                        );
                                       }
-                                      return SingleChildScrollView(
-                                        child: SizedBox(
-                                          width:
-                                              MediaQuery.of(
-                                                context,
-                                              ).size.width *
-                                              0.4,
-                                          height:
-                                              MediaQuery.of(
-                                                context,
-                                              ).size.height *
-                                              0.4,
-                                          child: Scrollbar(
-                                            thumbVisibility: true,
-                                            child: ListView.builder(
-                                              itemCount:
-                                                  generator
-                                                      .generatedStrings
-                                                      .length,
-                                              itemBuilder: (context, index) {
-                                                return Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        vertical: 8.0,
-                                                      ),
-                                                  child: GestureDetector(
-                                                    onTap: () {
-                                                      showDialog(
-                                                        context: context,
-                                                        builder:
-                                                            (
-                                                              context,
-                                                            ) => AlertDialog(
-                                                              content: Center(
+                                      return SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                            0.4,
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                            0.4,
+                                        child: Scrollbar(
+                                          thumbVisibility: true,
+                                          child: ListView.builder(
+                                            itemCount:
+                                                generator
+                                                    .generatedStrings
+                                                    .length,
+                                            itemBuilder: (context, index) {
+                                              return Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8.0,
+                                                    ),
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder:
+                                                          (
+                                                            context,
+                                                          ) => AlertDialog(
+                                                            title: Text(
+                                                              "Rules used, in order...",
+                                                            ),
+                                                            content: SizedBox(
+                                                              height:
+                                                                  MediaQuery.of(
+                                                                        context,
+                                                                      )
+                                                                      .size
+                                                                      .height *
+                                                                  0.5,
+                                                              width:
+                                                                  MediaQuery.of(
+                                                                    context,
+                                                                  ).size.width *
+                                                                  0.5,
+                                                              child: SingleChildScrollView(
                                                                 child: Text(
                                                                   generator
                                                                           .generatedStrings[generator
@@ -133,20 +202,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 ),
                                                               ),
                                                             ),
-                                                      );
-                                                    },
-                                                    child: Text(
-                                                      generator
-                                                          .generatedStrings
-                                                          .keys
-                                                          .toList()[index],
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                    ),
+                                                          ),
+                                                    );
+                                                  },
+                                                  child: Text(
+                                                    generator
+                                                        .generatedStrings
+                                                        .keys
+                                                        .toList()[index],
+                                                    textAlign: TextAlign.center,
                                                   ),
-                                                );
-                                              },
-                                            ),
+                                                ),
+                                              );
+                                            },
                                           ),
                                         ),
                                       );
@@ -154,8 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                            ),
-                      );
+                        );
+                      }
                     },
                     child: Text("Generate"),
                   ),
