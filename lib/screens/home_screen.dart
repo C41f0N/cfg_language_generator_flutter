@@ -43,12 +43,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   SizedBox(height: 30),
 
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: "CFG Rules (In Json)",
+                  Container(
+                    alignment: Alignment.center,
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: "CFG Rules (In Json)",
+                      ),
+                      controller: prodRulesController,
+                      maxLines: null,
                     ),
-                    controller: prodRulesController,
-                    maxLines: null,
                   ),
                   SizedBox(height: 30),
                   ElevatedButton(
@@ -82,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Slider(
                           value: generator.maxDepth / 20,
